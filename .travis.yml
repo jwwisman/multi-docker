@@ -1,0 +1,23 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jwwisman/vue-test -f  ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jwwisman/vue-test npm run test -- ----coverage
+
+after_success:
+  - docker build -t jwwisman/multi-client ./client
+  - docker build -t jwwisman/multi-nginx ./nginx
+  - docker build -t jwwisman/multi-server ./server
+  - docker build -t jwwisman/multi-worker ./worker
+  # log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take those images and push them to docker hub
+  - docker push jwwisman/multi-client
+  - docker push jwwisman/multi-nginx
+  - docker push jwwisman/multi-server
+  - docker push jwwisman/multi-worker
